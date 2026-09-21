@@ -1,3 +1,6 @@
+const loadBtn =
+    document.querySelector("#loadBtn");
+
 const searchInput =
     document.querySelector("#searchInput");
 
@@ -31,31 +34,35 @@ let currentPage = 1;
 const rowsPerPage = 10;
 
 
-/*
- * 페이지가 열리면
- * 자동으로 첫 페이지 조회
- */
-window.addEventListener(
-    "DOMContentLoaded",
+/* ==============================
+   주차장 정보 불러오기
+============================== */
+
+loadBtn.addEventListener(
+    "click",
     () => {
+
+        searchInput.value = "";
 
         loadParkingData(1);
     }
 );
 
 
-/*
- * 검색 버튼
- */
+/* ==============================
+   검색 버튼
+============================== */
+
 searchBtn.addEventListener(
     "click",
     searchParking
 );
 
 
-/*
- * Enter 키 검색
- */
+/* ==============================
+   Enter 키 검색
+============================== */
+
 searchInput.addEventListener(
     "keydown",
     event => {
@@ -68,9 +75,10 @@ searchInput.addEventListener(
 );
 
 
-/*
- * 전체보기
- */
+/* ==============================
+   전체보기
+============================== */
+
 resetBtn.addEventListener(
     "click",
     () => {
@@ -82,9 +90,10 @@ resetBtn.addEventListener(
 );
 
 
-/*
- * 이전
- */
+/* ==============================
+   이전 페이지
+============================== */
+
 prevBtn.addEventListener(
     "click",
     () => {
@@ -99,9 +108,10 @@ prevBtn.addEventListener(
 );
 
 
-/*
- * 다음
- */
+/* ==============================
+   다음 페이지
+============================== */
+
 nextBtn.addEventListener(
     "click",
     () => {
@@ -113,9 +123,10 @@ nextBtn.addEventListener(
 );
 
 
-/*
- * 검색 실행
- */
+/* ==============================
+   검색
+============================== */
+
 function searchParking() {
 
     const keyword =
@@ -124,7 +135,11 @@ function searchParking() {
 
     if (!keyword) {
 
-        loadParkingData(1);
+        alert(
+            "검색할 주차장 이름을 입력하세요."
+        );
+
+        searchInput.focus();
 
         return;
     }
@@ -137,21 +152,17 @@ function searchParking() {
 }
 
 
-/*
- * Cloudflare API 호출
- */
+/* ==============================
+   API 호출
+============================== */
+
 async function loadParkingData(
     pageNo,
     keyword = ""
 ) {
 
-    parkingList.innerHTML = `
-
-        <p class="no-result">
-            주차장 정보를 불러오는 중입니다...
-        </p>
-
-    `;
+    parkingList.innerHTML =
+        "<p>주차장 정보를 불러오는 중입니다...</p>";
 
 
     try {
@@ -200,7 +211,7 @@ async function loadParkingData(
 
 
         console.log(
-            "주차장 데이터:",
+            "주차장 데이터",
             data
         );
 
@@ -221,14 +232,29 @@ async function loadParkingData(
 
 
         /*
-         * 검색 중에는 페이지 이동 숨김
-         */
+           검색 결과일 때
+           가운데 정렬
+        */
         if (data.keyword) {
+
+            parkingList.classList.add(
+                "search-mode"
+            );
+
 
             paging.style.display =
                 "none";
 
         } else {
+
+            /*
+               전체보기일 때
+               원래 3열로 복원
+            */
+            parkingList.classList.remove(
+                "search-mode"
+            );
+
 
             paging.style.display =
                 "flex";
@@ -248,19 +274,22 @@ async function loadParkingData(
         parkingList.innerHTML = `
 
             <p class="error">
+
                 주차장 정보를 불러오지 못했습니다.
                 <br>
-                ${escapeHtml(error.message)}
-            </p>
 
+                ${error.message}
+
+            </p>
         `;
     }
 }
 
 
-/*
- * 주차장 목록 출력
- */
+/* ==============================
+   주차장 카드 출력
+============================== */
+
 function showParkingList(items) {
 
     parkingList.innerHTML = "";
@@ -288,169 +317,116 @@ function showParkingList(items) {
         parking => {
 
             const card =
-                document.createElement("article");
+                document.createElement("div");
 
 
             card.className =
                 "parking-card";
 
 
-            const name =
-                escapeHtml(
-                    parking.parknm || "이름 없음"
-                );
-
-
-            const code =
-                escapeHtml(
-                    parking.parkgcd || "-"
-                );
-
-
             /*
-             * 실시간 정보가 없는 경우
-             */
+               실시간 정보가 없는 경우
+            */
             if (parking.error) {
 
                 card.innerHTML = `
 
-                    <div class="card-header">
+                    <h2>
+                        ${parking.parknm}
+                    </h2>
+
+                    <p>
+                        주차장 코드 :
+                        ${parking.parkgcd}
+                    </p>
+
+                    <div class="status unknown">
+                        실시간 정보 없음
+                    </div>
+                `;
+
+            } else {
+
+                const status =
+                    getParkingStatus(
+                        parking.curravacnt,
+                        parking.maxcnt
+                    );
+
+
+                card.innerHTML = `
+
+                    <h2>
+                        ${parking.parknm}
+                    </h2>
+
+
+                    <p>
+                        주차장 코드 :
+                        ${parking.parkgcd}
+                    </p>
+
+
+                    <div class="parking-info">
 
                         <div>
 
-                            <h2>
-                                ${name}
-                            </h2>
-
-                            <span class="parking-code">
-                                ${code}
+                            <span>
+                                전체 주차면
                             </span>
+
+                            <strong>
+                                ${parking.maxcnt}
+                            </strong>
 
                         </div>
 
 
-                        <span class="status unknown">
-                            정보 없음
-                        </span>
+                        <div>
+
+                            <span>
+                                현재 주차
+                            </span>
+
+                            <strong>
+                                ${parking.parkingcnt}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                주차 가능
+                            </span>
+
+                            <strong>
+                                ${parking.curravacnt}
+                            </strong>
+
+                        </div>
 
                     </div>
 
 
-                    <div class="available">
-
-                        <span>
-                            실시간 주차정보
-                        </span>
-
-                        <strong>
-                            -
-                        </strong>
-
-                    </div>
-
-                `;
-
-
-                parkingList.appendChild(
-                    card
-                );
-
-
-                return;
-            }
-
-
-            const status =
-                getParkingStatus(
-                    parking.curravacnt,
-                    parking.maxcnt
-                );
-
-
-            const updateTime =
-                formatUpdateTime(
-                    parking.lastupdatetime
-                );
-
-
-            card.innerHTML = `
-
-                <div class="card-header">
-
-                    <div>
-
-                        <h2>
-                            ${name}
-                        </h2>
-
-                        <span class="parking-code">
-                            ${code}
-                        </span>
-
-                    </div>
-
-
-                    <span
+                    <div
                         class="status ${status.className}"
                     >
+
                         ${status.text}
-                    </span>
-
-                </div>
-
-
-                <div class="available">
-
-                    <span>
-                        주차 가능
-                    </span>
-
-                    <strong>
-                        ${parking.curravacnt}
-                    </strong>
-
-                    <span>
-                        대
-                    </span>
-
-                </div>
-
-
-                <div class="parking-detail">
-
-                    <div>
-
-                        <span>
-                            전체 주차면
-                        </span>
-
-                        <strong>
-                            ${parking.maxcnt}
-                        </strong>
 
                     </div>
 
 
-                    <div>
+                    <p class="update-time">
 
-                        <span>
-                            현재 주차
-                        </span>
+                        갱신 :
+                        ${parking.lastupdatetime}
 
-                        <strong>
-                            ${parking.parkingcnt}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="update-time">
-                    ${updateTime} 기준
-                </div>
-
-            `;
+                    </p>
+                `;
+            }
 
 
             parkingList.appendChild(
@@ -461,57 +437,54 @@ function showParkingList(items) {
 }
 
 
-/*
- * 주차상태 판단
- */
+/* ==============================
+   주차상태 판단
+============================== */
+
 function getParkingStatus(
     available,
     total
 ) {
 
-    if (
-        total === undefined
-        ||
-        total === null
-        ||
-        Number(total) <= 0
-    ) {
+    if (!total) {
 
         return {
-            text: "정보 없음",
-            className: "unknown"
+
+            text:
+                "정보 없음",
+
+            className:
+                "unknown"
         };
     }
 
 
-    const availableNumber =
-        Number(available);
-
-
-    const totalNumber =
-        Number(total);
-
-
-    if (availableNumber <= 0) {
+    if (available === 0) {
 
         return {
-            text: "만차",
-            className: "full"
+
+            text:
+                "만차",
+
+            className:
+                "full"
         };
     }
 
 
     const ratio =
-        availableNumber
-        /
-        totalNumber;
+        available / total;
 
 
     if (ratio >= 0.5) {
 
         return {
-            text: "여유",
-            className: "good"
+
+            text:
+                "여유",
+
+            className:
+                "good"
         };
     }
 
@@ -519,22 +492,31 @@ function getParkingStatus(
     if (ratio >= 0.2) {
 
         return {
-            text: "보통",
-            className: "normal"
+
+            text:
+                "보통",
+
+            className:
+                "normal"
         };
     }
 
 
     return {
-        text: "혼잡",
-        className: "busy"
+
+        text:
+            "혼잡",
+
+        className:
+            "busy"
     };
 }
 
 
-/*
- * 검색결과 요약
- */
+/* ==============================
+   검색 결과 표시
+============================== */
+
 function showSummary(
     totalCount,
     keyword
@@ -545,7 +527,7 @@ function showSummary(
         summary.innerHTML = `
 
             "<strong>
-                ${escapeHtml(keyword)}
+                ${keyword}
             </strong>"
 
             검색 결과
@@ -573,9 +555,10 @@ function showSummary(
 }
 
 
-/*
- * 페이지 표시
- */
+/* ==============================
+   페이지 표시
+============================== */
+
 function updatePaging(totalCount) {
 
     const totalPages =
@@ -585,7 +568,7 @@ function updatePaging(totalCount) {
 
 
     pageInfo.textContent =
-        `${currentPage} / ${totalPages}`;
+        `${currentPage} / ${totalPages} 페이지`;
 
 
     prevBtn.disabled =
@@ -594,71 +577,4 @@ function updatePaging(totalCount) {
 
     nextBtn.disabled =
         currentPage >= totalPages;
-}
-
-
-/*
- * 날짜에서 시간만 표시
- *
- * 2026-09-21 16:20:01
- * →
- * 16:20
- */
-function formatUpdateTime(
-    dateTime
-) {
-
-    if (!dateTime) {
-
-        return "갱신시간 없음";
-    }
-
-
-    const parts =
-        String(dateTime)
-            .split(" ");
-
-
-    if (parts.length < 2) {
-
-        return dateTime;
-    }
-
-
-    return parts[1]
-        .substring(0, 5);
-}
-
-
-/*
- * HTML 특수문자 처리
- */
-function escapeHtml(value) {
-
-    return String(value)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
 }

@@ -3,8 +3,8 @@ export async function onRequestGet(context) {
     try {
 
         /*
-         * Cloudflare Secret에서
-         * 인증키 가져오기
+         * Cloudflare 환경변수에서
+         * API 인증키 가져오기
          */
         let serviceKey =
             context.env.BUSAN_API_KEY;
@@ -73,7 +73,7 @@ export async function onRequestGet(context) {
 
 
         /*
-         * 검색할 때는
+         * 검색할 경우
          * 전체 주차장 목록 조회
          */
         const listRows =
@@ -88,11 +88,10 @@ export async function onRequestGet(context) {
                 : pageNo;
 
 
-        /*
-         * ======================
-         * 1. 주차장 목록 API
-         * ======================
-         */
+        /* ==========================
+           1. 주차장 목록 조회
+        ========================== */
+
         const listUrl =
             new URL(
                 "https://apis.data.go.kr/B552587/ParkingInfoService_v2/getParkingList_v2"
@@ -151,29 +150,10 @@ export async function onRequestGet(context) {
         }
 
 
-        let listData;
-
-
-        try {
-
-            listData =
-                JSON.parse(
-                    listText
-                );
-
-        } catch (error) {
-
-            return jsonResponse(
-                {
-                    error:
-                        "주차장 목록 응답이 JSON 형식이 아닙니다.",
-
-                    response:
-                        listText
-                },
-                500
+        const listData =
+            JSON.parse(
+                listText
             );
-        }
 
 
         let items =
@@ -192,11 +172,10 @@ export async function onRequestGet(context) {
         }
 
 
-        /*
-         * ======================
-         * 2. 주차장 이름 검색
-         * ======================
-         */
+        /* ==========================
+           2. 주차장 이름 검색
+        ========================== */
+
         if (keyword) {
 
             const searchWord =
@@ -217,12 +196,10 @@ export async function onRequestGet(context) {
         }
 
 
-        /*
-         * ======================
-         * 3. 각 주차장
-         *    실시간 현황 조회
-         * ======================
-         */
+        /* ==========================
+           3. 실시간 주차정보 조회
+        ========================== */
+
         const parkingData =
             await Promise.all(
 
@@ -379,13 +356,13 @@ export async function onRequestGet(context) {
             );
 
 
-        /*
-         * ======================
-         * 4. 브라우저로 전달
-         * ======================
-         */
+        /* ==========================
+           4. 브라우저에 결과 전달
+        ========================== */
+
         return jsonResponse(
             {
+
                 pageNo:
                     Number(pageNo),
 
@@ -428,9 +405,10 @@ export async function onRequestGet(context) {
 }
 
 
-/*
- * JSON 응답 함수
- */
+/* ==============================
+   JSON 응답
+============================== */
+
 function jsonResponse(
     data,
     status = 200
