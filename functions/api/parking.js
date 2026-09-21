@@ -2,16 +2,23 @@ export async function onRequestGet(context) {
 
     try {
 
+        /*
+         * Cloudflare Secret에서
+         * 인증키 가져오기
+         */
         let serviceKey =
             context.env.BUSAN_API_KEY;
 
 
         if (!serviceKey) {
 
-            return jsonResponse({
-                error:
-                    "BUSAN_API_KEY가 설정되어 있지 않습니다."
-            }, 500);
+            return jsonResponse(
+                {
+                    error:
+                        "BUSAN_API_KEY가 설정되어 있지 않습니다."
+                },
+                500
+            );
         }
 
 
@@ -20,50 +27,71 @@ export async function onRequestGet(context) {
 
 
         try {
+
             serviceKey =
-                decodeURIComponent(serviceKey);
+                decodeURIComponent(
+                    serviceKey
+                );
+
         } catch (error) {
+
+            // 그대로 사용
         }
 
 
+        /*
+         * 브라우저 요청값
+         */
         const requestUrl =
-            new URL(context.request.url);
+            new URL(
+                context.request.url
+            );
 
 
         const pageNo =
-            requestUrl.searchParams.get("pageNo")
+            requestUrl
+                .searchParams
+                .get("pageNo")
             || "1";
 
 
         const numOfRows =
-            requestUrl.searchParams.get("numOfRows")
+            requestUrl
+                .searchParams
+                .get("numOfRows")
             || "10";
 
 
-        // 검색어
         const keyword =
             (
-                requestUrl.searchParams.get("keyword")
+                requestUrl
+                    .searchParams
+                    .get("keyword")
                 || ""
-            ).trim();
+            )
+                .trim();
 
 
         /*
-         * 검색 중이면 전체 목록을 가져온다.
-         * 일반 조회라면 기존처럼 10개만 가져온다.
+         * 검색할 때는
+         * 전체 주차장 목록 조회
          */
         const listRows =
-            keyword ? "100" : numOfRows;
+            keyword
+                ? "100"
+                : numOfRows;
 
 
         const listPage =
-            keyword ? "1" : pageNo;
-
+            keyword
+                ? "1"
+                : pageNo;
 
 
         /*
-         * 1단계
-         * 주차장 목록 조회
+         * ======================
+         * 1. 주차장 목록 API
+         * ======================
          */
         const listUrl =
             new URL(
@@ -76,15 +104,18 @@ export async function onRequestGet(context) {
             serviceKey
         );
 
+
         listUrl.searchParams.set(
             "pageNo",
             listPage
         );
 
+
         listUrl.searchParams.set(
             "numOfRows",
             listRows
         );
+
 
         listUrl.searchParams.set(
             "resultType",
@@ -104,26 +135,50 @@ export async function onRequestGet(context) {
 
         if (!listResponse.ok) {
 
-            return jsonResponse({
-                error:
-                    "주차장 목록 API 호출 실패",
+            return jsonResponse(
+                {
+                    error:
+                        "주차장 목록 API 호출 실패",
 
-                status:
-                    listResponse.status,
+                    status:
+                        listResponse.status,
 
-                detail:
-                    listText
-
-            }, listResponse.status);
+                    detail:
+                        listText
+                },
+                listResponse.status
+            );
         }
 
 
-        const listData =
-            JSON.parse(listText);
+        let listData;
+
+
+        try {
+
+            listData =
+                JSON.parse(
+                    listText
+                );
+
+        } catch (error) {
+
+            return jsonResponse(
+                {
+                    error:
+                        "주차장 목록 응답이 JSON 형식이 아닙니다.",
+
+                    response:
+                        listText
+                },
+                500
+            );
+        }
 
 
         let items =
-            listData.response
+            listData
+                .response
                 ?.body
                 ?.items
                 ?.item
@@ -132,33 +187,41 @@ export async function onRequestGet(context) {
 
         if (!Array.isArray(items)) {
 
-            items = [items];
+            items =
+                [items];
         }
 
 
-
         /*
-         * 2단계
-         * 검색어가 있으면 주차장 이름 검색
+         * ======================
+         * 2. 주차장 이름 검색
+         * ======================
          */
         if (keyword) {
+
+            const searchWord =
+                keyword.toLowerCase();
+
 
             items =
                 items.filter(
                     parking =>
-                        parking.parknm
+
+                        parking
+                            .parknm
                             ?.toLowerCase()
                             .includes(
-                                keyword.toLowerCase()
+                                searchWord
                             )
                 );
         }
 
 
-
         /*
-         * 3단계
-         * 검색된 주차장들의 실시간 현황 조회
+         * ======================
+         * 3. 각 주차장
+         *    실시간 현황 조회
+         * ======================
          */
         const parkingData =
             await Promise.all(
@@ -177,20 +240,24 @@ export async function onRequestGet(context) {
                             serviceKey
                         );
 
+
                         infoUrl.searchParams.set(
                             "pageNo",
                             "1"
                         );
+
 
                         infoUrl.searchParams.set(
                             "numOfRows",
                             "10"
                         );
 
+
                         infoUrl.searchParams.set(
                             "pParkGCd",
                             parking.parkgcd
                         );
+
 
                         infoUrl.searchParams.set(
                             "resultType",
@@ -213,6 +280,7 @@ export async function onRequestGet(context) {
                             if (!response.ok) {
 
                                 return {
+
                                     parkgcd:
                                         parking.parkgcd,
 
@@ -226,11 +294,14 @@ export async function onRequestGet(context) {
 
 
                             const data =
-                                JSON.parse(text);
+                                JSON.parse(
+                                    text
+                                );
 
 
                             let info =
-                                data.response
+                                data
+                                    .response
                                     ?.body
                                     ?.items
                                     ?.item;
@@ -248,6 +319,7 @@ export async function onRequestGet(context) {
                             if (!info) {
 
                                 return {
+
                                     parkgcd:
                                         parking.parkgcd,
 
@@ -307,53 +379,58 @@ export async function onRequestGet(context) {
             );
 
 
-
         /*
-         * 브라우저로 결과 전달
+         * ======================
+         * 4. 브라우저로 전달
+         * ======================
          */
-        return jsonResponse({
+        return jsonResponse(
+            {
+                pageNo:
+                    Number(pageNo),
 
-            pageNo:
-                Number(pageNo),
+                numOfRows:
+                    Number(numOfRows),
 
-            numOfRows:
-                Number(numOfRows),
+                totalCount:
+                    keyword
+                        ? parkingData.length
+                        : Number(
+                            listData
+                                .response
+                                ?.body
+                                ?.totalCount
+                            || 0
+                        ),
 
-            // 검색 중이면 검색 결과 수
-            totalCount:
-                keyword
-                    ? parkingData.length
-                    : Number(
-                        listData.response
-                            ?.body
-                            ?.totalCount || 0
-                    ),
+                keyword:
+                    keyword,
 
-            keyword:
-                keyword,
-
-            items:
-                parkingData
-
-        });
+                items:
+                    parkingData
+            }
+        );
 
 
     } catch (error) {
 
-        return jsonResponse({
+        return jsonResponse(
+            {
+                error:
+                    "서버 처리 중 오류가 발생했습니다.",
 
-            error:
-                "서버 처리 중 오류가 발생했습니다.",
-
-            detail:
-                error.message
-
-        }, 500);
+                detail:
+                    error.message
+            },
+            500
+        );
     }
 }
 
 
-
+/*
+ * JSON 응답 함수
+ */
 function jsonResponse(
     data,
     status = 200
@@ -371,6 +448,7 @@ function jsonResponse(
             status: status,
 
             headers: {
+
                 "Content-Type":
                     "application/json; charset=utf-8"
             }

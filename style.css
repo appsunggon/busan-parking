@@ -1,231 +1,256 @@
-/* 전체 화면 */
+/* =========================
+   기본 화면
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
 body {
     margin: 0;
-    font-family: Arial, "Noto Sans KR", sans-serif;
+
+    font-family:
+        Arial,
+        "Noto Sans KR",
+        sans-serif;
+
     background-color: #f4f6f8;
+
     color: #222;
 }
 
 
-/* 전체 내용 영역 */
 .container {
     max-width: 1250px;
+
     margin: 0 auto;
-    padding: 30px 20px;
+
+    padding: 35px 25px 50px;
 }
 
 
-/* 제목 */
-h1 {
+/* =========================
+   제목 영역
+========================= */
+
+.header {
     text-align: center;
-    font-size: 40px;
-    margin-bottom: 30px;
+
+    margin-bottom: 35px;
 }
 
 
-/* 설명 */
-.description {
-    text-align: center;
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 30px;
+.header h1 {
+    margin: 0 0 15px;
+
+    font-size: 38px;
 }
 
 
-/* 주차장 정보 불러오기 버튼 */
-#loadBtn {
-    display: block;
-    margin: 0 auto 25px;
-
-    padding: 13px 25px;
+.header p {
+    margin: 0;
 
     font-size: 17px;
 
-    cursor: pointer;
-
-    background-color: white;
-
-    border: 1px solid #888;
-    border-radius: 5px;
+    color: #666;
 }
 
 
-/* 검색 영역 */
-.search-box {
+/* =========================
+   검색
+========================= */
+
+.search-area {
     display: flex;
+
     justify-content: center;
+
     gap: 10px;
 
-    margin: 25px 0 35px;
+    margin-bottom: 35px;
 }
 
 
-/* 검색 입력창 */
-.search-box input {
-    width: 380px;
+.search-area input {
+    width: 460px;
 
-    padding: 13px 15px;
+    padding: 14px 16px;
 
     font-size: 17px;
 
-    border: 1px solid #999;
-    border-radius: 6px;
+    border: 1px solid #bbb;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background-color: white;
 }
 
 
-/* 검색 버튼 */
-.search-box button {
-    padding: 12px 20px;
+.search-area input:focus {
+    border-color: #555;
+}
+
+
+.search-area button {
+    padding: 0 25px;
 
     font-size: 16px;
 
+    border: none;
+
+    border-radius: 8px;
+
+    background-color: #222;
+
+    color: white;
+
     cursor: pointer;
-
-    background-color: white;
-
-    border: 1px solid #999;
-    border-radius: 6px;
 }
 
 
-/* 검색 버튼에 마우스 올렸을 때 */
-.search-box button:hover,
-#loadBtn:hover {
-    background-color: #eeeeee;
+.search-area button:hover {
+    background-color: #444;
 }
 
 
-/* 전체 주차장 수 / 검색 결과 */
+/* =========================
+   검색 결과 제목
+========================= */
+
+.result-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 18px;
+}
+
+
 #summary {
-    margin: 20px 0;
-
     font-size: 20px;
 }
 
 
-/* 주차장 카드 영역 */
+#summary strong {
+    font-size: 23px;
+}
+
+
+.reset-btn {
+    padding: 8px 15px;
+
+    border: 1px solid #aaa;
+
+    border-radius: 6px;
+
+    background-color: white;
+
+    cursor: pointer;
+}
+
+
+.reset-btn:hover {
+    background-color: #eeeeee;
+}
+
+
+/* =========================
+   주차장 목록
+========================= */
+
 .parking-list {
     display: grid;
 
     grid-template-columns:
         repeat(3, 1fr);
 
-    gap: 18px;
+    gap: 20px;
 }
 
 
-/* 개별 주차장 카드 */
+/* =========================
+   주차장 카드
+========================= */
+
 .parking-card {
     background-color: white;
 
+    border-radius: 14px;
+
     padding: 24px;
 
-    border-radius: 12px;
-
     box-shadow:
-        0 2px 10px rgba(0, 0, 0, 0.08);
+        0 3px 12px rgba(0, 0, 0, 0.08);
 }
 
 
-/* 주차장 이름 */
-.parking-card h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-
-    font-size: 23px;
-}
-
-
-/* 주차장 코드 */
-.parking-card p {
-    color: #666;
-    font-size: 16px;
-}
-
-
-/* 전체/현재/가능 주차면 */
-.parking-info {
+.card-header {
     display: flex;
 
-    gap: 15px;
+    justify-content: space-between;
 
-    margin: 30px 0 25px;
+    align-items: flex-start;
+
+    gap: 10px;
 }
 
 
-/* 각각의 숫자 박스 */
-.parking-info div {
-    flex: 1;
+.card-header h2 {
+    margin: 0 0 7px;
 
-    padding: 15px 8px;
-
-    text-align: center;
-
-    background-color: #f5f5f5;
+    font-size: 22px;
 }
 
 
-/* 항목 이름 */
-.parking-info span {
-    display: block;
-
-    margin-bottom: 7px;
-
+.parking-code {
     font-size: 14px;
 
-    color: #666;
+    color: #888;
 }
 
 
-/* 주차 숫자 */
-.parking-info strong {
-    display: block;
+/* =========================
+   상태 배지
+========================= */
 
-    font-size: 25px;
-
-    color: #000;
-}
-
-
-/* 주차 상태 */
 .status {
-    padding: 12px;
+    flex-shrink: 0;
 
-    border-radius: 7px;
+    padding: 6px 12px;
 
-    text-align: center;
+    border-radius: 20px;
 
-    font-size: 17px;
+    font-size: 14px;
 
     font-weight: bold;
 }
 
 
-/* 여유 */
 .good {
-    background-color: #d8f2df;
+    background-color: #d9f2e1;
 }
 
 
-/* 보통 */
 .normal {
     background-color: #fff0bd;
 }
 
 
-/* 혼잡 */
 .busy {
     background-color: #ffdda9;
 }
 
 
-/* 만차 */
 .full {
     background-color: #f6cccc;
 }
 
 
-/* 실시간 정보 없음 */
 .unknown {
     background-color: #eeeeee;
 
@@ -233,9 +258,72 @@ h1 {
 }
 
 
-/* 갱신시간 */
-.update-time {
-    margin-top: 20px;
+/* =========================
+   주차 가능 숫자
+========================= */
+
+.available {
+    text-align: center;
+
+    margin: 30px 0 25px;
+
+    padding: 22px;
+
+    border-radius: 10px;
+
+    background-color: #f7f8fa;
+}
+
+
+.available span {
+    font-size: 16px;
+
+    color: #666;
+}
+
+
+.available strong {
+    display: inline-block;
+
+    margin: 0 6px;
+
+    font-size: 48px;
+
+    color: #111;
+}
+
+
+/* =========================
+   전체 / 현재주차
+========================= */
+
+.parking-detail {
+    display: flex;
+
+    border-top: 1px solid #eeeeee;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.parking-detail div {
+    flex: 1;
+
+    text-align: center;
+
+    padding: 16px 5px;
+}
+
+
+.parking-detail div:first-child {
+    border-right: 1px solid #eeeeee;
+}
+
+
+.parking-detail span {
+    display: block;
+
+    margin-bottom: 5px;
 
     font-size: 14px;
 
@@ -243,98 +331,164 @@ h1 {
 }
 
 
-/* 페이지 이동 */
+.parking-detail strong {
+    font-size: 21px;
+}
+
+
+/* =========================
+   갱신 시간
+========================= */
+
+.update-time {
+    margin-top: 16px;
+
+    text-align: right;
+
+    font-size: 13px;
+
+    color: #999;
+}
+
+
+/* =========================
+   페이지 이동
+========================= */
+
 .paging {
     display: flex;
 
     justify-content: center;
+
     align-items: center;
 
     gap: 20px;
 
-    margin: 35px 0;
+    margin-top: 35px;
 }
 
 
-/* 이전/다음 버튼 */
 .paging button {
-    padding: 10px 20px;
+    padding: 9px 20px;
 
     font-size: 15px;
+
+    border: 1px solid #aaa;
+
+    border-radius: 6px;
+
+    background-color: white;
 
     cursor: pointer;
 }
 
 
-/* 검색 결과 없음 */
-.no-result {
-    grid-column: 1 / -1;
-
-    text-align: center;
-
-    font-size: 18px;
-
-    padding: 40px;
+.paging button:hover:not(:disabled) {
+    background-color: #eeeeee;
 }
 
 
-/* 오류 */
+.paging button:disabled {
+    opacity: 0.4;
+
+    cursor: default;
+}
+
+
+#pageInfo {
+    min-width: 80px;
+
+    text-align: center;
+
+    font-weight: bold;
+}
+
+
+/* =========================
+   검색 결과 없음 / 오류
+========================= */
+
+.no-result,
 .error {
     grid-column: 1 / -1;
 
-    text-align: center;
+    padding: 60px 20px;
 
-    color: red;
+    text-align: center;
 
     font-size: 18px;
 }
 
 
-/* 태블릿 */
+.error {
+    color: red;
+}
+
+
+/* =========================
+   태블릿
+========================= */
+
 @media (max-width: 900px) {
 
     .parking-list {
         grid-template-columns:
             repeat(2, 1fr);
     }
+
 }
 
 
-/* 스마트폰 */
+/* =========================
+   스마트폰
+========================= */
+
 @media (max-width: 600px) {
 
     .container {
-        padding: 20px 12px;
+        padding: 25px 15px;
     }
 
 
-    h1 {
-        font-size: 30px;
+    .header h1 {
+        font-size: 28px;
     }
 
 
-    .search-box {
+    .header p {
+        font-size: 15px;
+    }
+
+
+    .search-area {
         flex-direction: column;
     }
 
 
-    .search-box input {
-        width: auto;
+    .search-area input {
+        width: 100%;
+    }
+
+
+    .search-area button {
+        padding: 13px;
     }
 
 
     .parking-list {
-        grid-template-columns:
-            1fr;
+        grid-template-columns: 1fr;
     }
 
 
-    .parking-info {
-        gap: 6px;
+    .result-header {
+        align-items: flex-start;
+
+        gap: 10px;
     }
 
 
-    .parking-info strong {
-        font-size: 21px;
+    .available strong {
+        font-size: 42px;
     }
+
 }
