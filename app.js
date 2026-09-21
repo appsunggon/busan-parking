@@ -1,11 +1,23 @@
 const loadBtn =
     document.querySelector("#loadBtn");
 
+const searchInput =
+    document.querySelector("#searchInput");
+
+const searchBtn =
+    document.querySelector("#searchBtn");
+
+const resetBtn =
+    document.querySelector("#resetBtn");
+
 const parkingList =
     document.querySelector("#parkingList");
 
 const summary =
     document.querySelector("#summary");
+
+const paging =
+    document.querySelector("#paging");
 
 const prevBtn =
     document.querySelector("#prevBtn");
@@ -23,17 +35,71 @@ const rowsPerPage = 10;
 
 
 
+/*
+ * 전체 조회
+ */
 loadBtn.addEventListener(
     "click",
-    () => loadParkingData(1)
+    () => {
+
+        searchInput.value = "";
+
+        loadParkingData(1);
+    }
 );
 
 
+
+/*
+ * 검색 버튼
+ */
+searchBtn.addEventListener(
+    "click",
+    searchParking
+);
+
+
+
+/*
+ * Enter 키로도 검색
+ */
+searchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            searchParking();
+        }
+    }
+);
+
+
+
+/*
+ * 전체보기
+ */
+resetBtn.addEventListener(
+    "click",
+    () => {
+
+        searchInput.value = "";
+
+        loadParkingData(1);
+    }
+);
+
+
+
+/*
+ * 이전 페이지
+ */
 prevBtn.addEventListener(
     "click",
     () => {
 
         if (currentPage > 1) {
+
             loadParkingData(
                 currentPage - 1
             );
@@ -42,6 +108,10 @@ prevBtn.addEventListener(
 );
 
 
+
+/*
+ * 다음 페이지
+ */
 nextBtn.addEventListener(
     "click",
     () => {
@@ -54,7 +124,42 @@ nextBtn.addEventListener(
 
 
 
-async function loadParkingData(pageNo) {
+/*
+ * 검색 실행
+ */
+function searchParking() {
+
+    const keyword =
+        searchInput.value.trim();
+
+
+    if (!keyword) {
+
+        alert(
+            "검색할 주차장 이름을 입력하세요."
+        );
+
+        searchInput.focus();
+
+        return;
+    }
+
+
+    loadParkingData(
+        1,
+        keyword
+    );
+}
+
+
+
+/*
+ * API 호출
+ */
+async function loadParkingData(
+    pageNo,
+    keyword = ""
+) {
 
     parkingList.innerHTML =
         "<p>주차장 정보를 불러오는 중입니다...</p>";
@@ -62,9 +167,34 @@ async function loadParkingData(pageNo) {
 
     try {
 
-        const response = await fetch(
-            `/api/parking?pageNo=${pageNo}&numOfRows=${rowsPerPage}`
+        const params =
+            new URLSearchParams();
+
+
+        params.set(
+            "pageNo",
+            pageNo
         );
+
+        params.set(
+            "numOfRows",
+            rowsPerPage
+        );
+
+
+        if (keyword) {
+
+            params.set(
+                "keyword",
+                keyword
+            );
+        }
+
+
+        const response =
+            await fetch(
+                `/api/parking?${params.toString()}`
+            );
 
 
         if (!response.ok) {
@@ -85,11 +215,13 @@ async function loadParkingData(pageNo) {
         );
 
 
-        currentPage = pageNo;
+        currentPage =
+            pageNo;
 
 
         showSummary(
-            data.totalCount
+            data.totalCount,
+            data.keyword
         );
 
 
@@ -98,19 +230,39 @@ async function loadParkingData(pageNo) {
         );
 
 
-        updatePaging(
-            data.totalCount
-        );
+        /*
+         * 검색 중에는 페이지 버튼 숨김
+         */
+        if (data.keyword) {
+
+            paging.style.display =
+                "none";
+
+        } else {
+
+            paging.style.display =
+                "flex";
+
+            updatePaging(
+                data.totalCount
+            );
+        }
 
 
     } catch (error) {
 
         console.error(error);
 
+
         parkingList.innerHTML = `
+
             <p class="error">
-                주차장 정보를 불러오지 못했습니다.<br>
+
+                주차장 정보를 불러오지 못했습니다.
+                <br>
+
                 ${error.message}
+
             </p>
         `;
     }
@@ -118,9 +270,30 @@ async function loadParkingData(pageNo) {
 
 
 
+/*
+ * 주차장 카드 출력
+ */
 function showParkingList(items) {
 
     parkingList.innerHTML = "";
+
+
+    if (
+        !items
+        ||
+        items.length === 0
+    ) {
+
+        parkingList.innerHTML = `
+
+            <p class="no-result">
+                검색된 주차장이 없습니다.
+            </p>
+
+        `;
+
+        return;
+    }
 
 
     items.forEach(
@@ -128,6 +301,7 @@ function showParkingList(items) {
 
             const card =
                 document.createElement("div");
+
 
             card.className =
                 "parking-card";
@@ -166,6 +340,7 @@ function showParkingList(items) {
                         ${parking.parknm}
                     </h2>
 
+
                     <p>
                         주차장 코드 :
                         ${parking.parkgcd}
@@ -175,6 +350,7 @@ function showParkingList(items) {
                     <div class="parking-info">
 
                         <div>
+
                             <span>
                                 전체 주차면
                             </span>
@@ -182,10 +358,12 @@ function showParkingList(items) {
                             <strong>
                                 ${parking.maxcnt}
                             </strong>
+
                         </div>
 
 
                         <div>
+
                             <span>
                                 현재 주차
                             </span>
@@ -193,10 +371,12 @@ function showParkingList(items) {
                             <strong>
                                 ${parking.parkingcnt}
                             </strong>
+
                         </div>
 
 
                         <div>
+
                             <span>
                                 주차 가능
                             </span>
@@ -204,19 +384,24 @@ function showParkingList(items) {
                             <strong>
                                 ${parking.curravacnt}
                             </strong>
+
                         </div>
 
                     </div>
 
 
-                    <div class="status ${status.className}">
+                    <div
+                        class="status ${status.className}"
+                    >
                         ${status.text}
                     </div>
 
 
                     <p class="update-time">
+
                         갱신 :
                         ${parking.lastupdatetime}
+
                     </p>
                 `;
             }
@@ -231,6 +416,9 @@ function showParkingList(items) {
 
 
 
+/*
+ * 주차 상태 판단
+ */
 function getParkingStatus(
     available,
     total
@@ -284,17 +472,48 @@ function getParkingStatus(
 
 
 
-function showSummary(totalCount) {
+/*
+ * 상단 요약
+ */
+function showSummary(
+    totalCount,
+    keyword
+) {
 
-    summary.innerHTML = `
-        전체 공영주차장
-        <strong>${totalCount}</strong>
-        곳
-    `;
+    if (keyword) {
+
+        summary.innerHTML = `
+
+            "<strong>${keyword}</strong>"
+            검색 결과
+
+            <strong>
+                ${totalCount}
+            </strong>
+            곳
+
+        `;
+
+    } else {
+
+        summary.innerHTML = `
+
+            전체 공영주차장
+
+            <strong>
+                ${totalCount}
+            </strong>
+            곳
+
+        `;
+    }
 }
 
 
 
+/*
+ * 페이지 표시
+ */
 function updatePaging(totalCount) {
 
     const totalPages =
