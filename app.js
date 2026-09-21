@@ -34,7 +34,6 @@ prevBtn.addEventListener(
     () => {
 
         if (currentPage > 1) {
-
             loadParkingData(
                 currentPage - 1
             );
@@ -81,56 +80,26 @@ async function loadParkingData(pageNo) {
 
 
         console.log(
-            "API 전체 응답",
+            "주차장 데이터",
             data
         );
-
-
-        // 공공데이터포털의 일반적인 JSON 구조
-        const body =
-            data.response?.body;
-
-
-        if (!body) {
-
-            console.log(data);
-
-            throw new Error(
-                "API 응답 구조를 확인할 수 없습니다."
-            );
-        }
-
-
-        let items =
-            body.items?.item || [];
-
-
-        // 데이터가 1건인 경우 배열이 아닐 수도 있음
-        if (!Array.isArray(items)) {
-
-            items = [items];
-        }
-
-
-        const totalCount =
-            Number(body.totalCount || 0);
 
 
         currentPage = pageNo;
 
 
         showSummary(
-            totalCount
+            data.totalCount
         );
 
 
         showParkingList(
-            items
+            data.items
         );
 
 
         updatePaging(
-            totalCount
+            data.totalCount
         );
 
 
@@ -154,15 +123,6 @@ function showParkingList(items) {
     parkingList.innerHTML = "";
 
 
-    if (items.length === 0) {
-
-        parkingList.innerHTML =
-            "<p>조회된 주차장이 없습니다.</p>";
-
-        return;
-    }
-
-
     items.forEach(
         parking => {
 
@@ -173,71 +133,93 @@ function showParkingList(items) {
                 "parking-card";
 
 
-            const name =
-                parking.pkNam || "이름 없음";
+            if (parking.error) {
+
+                card.innerHTML = `
+
+                    <h2>
+                        ${parking.parknm}
+                    </h2>
+
+                    <p>
+                        주차장 코드 :
+                        ${parking.parkgcd}
+                    </p>
+
+                    <div class="status unknown">
+                        실시간 정보 없음
+                    </div>
+                `;
+
+            } else {
+
+                const status =
+                    getParkingStatus(
+                        parking.curravacnt,
+                        parking.maxcnt
+                    );
 
 
-            const address =
-                parking.doroAddr !== "-"
-                    && parking.doroAddr
-                    ? parking.doroAddr
-                    : parking.jibunAddr || "주소정보 없음";
+                card.innerHTML = `
+
+                    <h2>
+                        ${parking.parknm}
+                    </h2>
+
+                    <p>
+                        주차장 코드 :
+                        ${parking.parkgcd}
+                    </p>
 
 
-            const total =
-                parking.pkCnt || "-";
+                    <div class="parking-info">
+
+                        <div>
+                            <span>
+                                전체 주차면
+                            </span>
+
+                            <strong>
+                                ${parking.maxcnt}
+                            </strong>
+                        </div>
 
 
-            const available =
-                parking.currava;
+                        <div>
+                            <span>
+                                현재 주차
+                            </span>
+
+                            <strong>
+                                ${parking.parkingcnt}
+                            </strong>
+                        </div>
 
 
-            const status =
-                getParkingStatus(
-                    available,
-                    total
-                );
+                        <div>
+                            <span>
+                                주차 가능
+                            </span>
 
+                            <strong>
+                                ${parking.curravacnt}
+                            </strong>
+                        </div>
 
-            card.innerHTML = `
-
-                <h2>
-                    ${name}
-                </h2>
-
-                <p>
-                    📍 ${address}
-                </p>
-
-                <div class="parking-info">
-
-                    <div>
-                        <span>전체 주차면</span>
-
-                        <strong>
-                            ${total}
-                        </strong>
                     </div>
 
-                    <div>
-                        <span>실시간 주차면</span>
 
-                        <strong>
-                            ${isValidNumber(available)
-                    ? available
-                    : "정보없음"
-                }
-                        </strong>
+                    <div class="status ${status.className}">
+                        ${status.text}
                     </div>
 
-                </div>
 
-
-                <div class="status ${status.className}">
-                    ${status.text}
-                </div>
-
-            `;
+                    <p class="update-time">
+                        갱신 :
+                        ${parking.lastupdatetime}
+                    </p>
+                `;
+            }
 
 
             parkingList.appendChild(
@@ -254,27 +236,16 @@ function getParkingStatus(
     total
 ) {
 
-    if (
-        !isValidNumber(available)
-        ||
-        !isValidNumber(total)
-    ) {
+    if (!total) {
 
         return {
-            text: "실시간 정보 없음",
+            text: "정보 없음",
             className: "unknown"
         };
     }
 
 
-    const availableNumber =
-        Number(available);
-
-    const totalNumber =
-        Number(total);
-
-
-    if (availableNumber === 0) {
+    if (available === 0) {
 
         return {
             text: "만차",
@@ -284,9 +255,7 @@ function getParkingStatus(
 
 
     const ratio =
-        availableNumber
-        /
-        totalNumber;
+        available / total;
 
 
     if (ratio >= 0.5) {
@@ -315,30 +284,11 @@ function getParkingStatus(
 
 
 
-function isValidNumber(value) {
-
-    return (
-        value !== undefined
-        &&
-        value !== null
-        &&
-        value !== "-"
-        &&
-        value !== ""
-        &&
-        !isNaN(Number(value))
-    );
-}
-
-
-
 function showSummary(totalCount) {
 
     summary.innerHTML = `
         전체 공영주차장
-        <strong>
-            ${totalCount}
-        </strong>
+        <strong>${totalCount}</strong>
         곳
     `;
 }
